@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/catalog")
 public class MovieCatalogResource {
+
     @Autowired
     private RestTemplate restTemplate;
 
@@ -26,15 +27,17 @@ public class MovieCatalogResource {
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
 
         UserRating userRating = restTemplate.getForObject("http://ratings-data-service/ratingsdata/users/" + userId, UserRating.class);
-        return userRating.getUserRating().stream().map(rating -> {
-            Movie movie = restTemplate.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
-            return new CatalogItem(movie.getName(), movie.getDescription(), rating.getRating());
+        assert userRating != null;
+        return userRating.getUserRating().stream().map(userrating -> {
+            Movie movie = restTemplate.getForObject("http://movie-info-service/movies/" + userrating.getMovieId(), Movie.class);
+            assert movie != null;
+            return new CatalogItem(movie.getName(), movie.getDescription(), userrating.getRating());
         })
                 .collect(Collectors.toList());
     }
 
-    public List<CatalogItem> getFallbackCatalog(@PathVariable("userId") String userId){
+    public List<CatalogItem> getFallbackCatalog(@PathVariable("userId") String userId) {
 
-        return Arrays.asList(new CatalogItem("No Movie","",0));
+        return Arrays.asList(new CatalogItem("No Movie", "", 0));
     }
 }
